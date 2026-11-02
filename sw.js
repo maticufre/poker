@@ -1,5 +1,5 @@
 /* Modo sin conexión: guarda la app y la sirve al instante; se actualiza sola cuando hay internet. */
-const V = 'poker-v1';
+const V = 'poker-v2';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
