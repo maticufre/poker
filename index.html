@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f3b2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Poker">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23c8372d'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='3' stroke-dasharray='6 5'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23a82a21' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+<title>Noche de Poker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: una sola columna tipo mesa. Pestañas arriba; el reloj sobre paño verde con fichas reales es lo más grande. */
+:root{
+  --bg:#eef2ee; --surface:#ffffff; --ink:#10231d; --muted:#566b62; --line:#cfdad3; --accent:#8a5f00; --on-accent:#ffffff;
+  --felt:#0f3b2e; --felt-hi:#18503d; --felt-ink:#eaf4ee; --felt-muted:#9cc2b2; --brass:#f0c75e;
+  --good:#1a7f4b; --bad:#b3261e;
+  --chip-white:#f1ede4; --chip-red:#c8372d; --chip-green:#1f8a5b; --chip-blue:#2f5fc4; --chip-black:#1c1c1f;
+  --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a1a15; --surface:#112a23; --ink:#e8f1ec; --muted:#8fa89d; --line:#1f4338; --accent:#f0c75e; --on-accent:#241a00;
+    --good:#5fd39a; --bad:#ff8a80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a1a15; --surface:#112a23; --ink:#e8f1ec; --muted:#8fa89d; --line:#1f4338; --accent:#f0c75e; --on-accent:#241a00;
+  --good:#5fd39a; --bad:#ff8a80; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button{touch-action:manipulation}
+button,input,textarea,summary{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:2px}
+h1{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;letter-spacing:.01em;text-transform:uppercase;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;font-size:14px}
+h2{font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:.04em;text-transform:uppercase;margin:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.tabs button{border:0;background:transparent;padding:10px 2px;border-radius:10px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--felt);color:var(--felt-ink)}
+
+[hidden]{display:none!important}
+section{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+p{margin:0}
+
+/* Chips */
+.chip{--s:26px;--c:var(--chip-white);--dash:#8d8777;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);position:relative;flex:none;box-shadow:0 1px 0 rgba(0,0,0,.4),inset 0 0 0 2px rgba(0,0,0,.16)}
+.chip::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(var(--dash) 0 14deg,transparent 14deg 45deg);-webkit-mask:radial-gradient(circle,transparent 60%,#000 62%);mask:radial-gradient(circle,transparent 60%,#000 62%)}
+.chip::after{content:"";position:absolute;inset:24%;border-radius:50%;border:1.5px solid var(--dash);opacity:.75}
+.chip.red{--c:var(--chip-red);--dash:#fff}
+.chip.green{--c:var(--chip-green);--dash:#fff}
+.chip.blue{--c:var(--chip-blue);--dash:#fff}
+.chip.black{--c:var(--chip-black);--dash:#fff}
+.chip.big{--s:34px}
+.stack{display:flex;align-items:center;min-height:26px}
+.stack .chip+.chip{margin-left:-11px}
+
+/* Felt clock */
+.felt{background:radial-gradient(120% 90% at 50% 0%,var(--felt-hi),var(--felt));color:var(--felt-ink);border-radius:22px;padding:20px 16px 18px;box-shadow:inset 0 0 0 1px rgba(240,199,94,.45),inset 0 0 0 6px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:16px}
+.felt .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--felt-muted);font-weight:600}
+.blinds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.blind{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.blind .n{font-family:var(--display);font-weight:800;font-size:clamp(48px,17vw,88px);line-height:.95;font-variant-numeric:tabular-nums}
+.blind .n small{font-size:.4em;vertical-align:.9em;margin-right:2px;color:var(--felt-muted)}
+.blind .how{font-size:13px;color:var(--felt-muted);min-height:20px}
+.felt.flash .blinds{animation:pulse .9s ease 2}
+@keyframes pulse{50%{filter:brightness(1.6)}}
+@media (prefers-reduced-motion:reduce){.felt.flash .blinds{animation:none}}
+.clockbox{display:flex;flex-direction:column;align-items:center;gap:2px;border-top:1px solid rgba(240,199,94,.25);padding-top:14px}
+.clock{font-family:var(--display);font-weight:800;font-size:clamp(48px,15vw,72px);line-height:1;color:var(--brass);font-variant-numeric:tabular-nums}
+.next{font-size:14px;color:var(--felt-ink);text-align:center}
+.bar{position:relative;height:8px;border-radius:99px;background:rgba(0,0,0,.35)}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--brass);width:0}
+.bar b{position:absolute;top:-4px;width:2px;height:16px;background:var(--felt-ink);opacity:.7;border-radius:2px}
+.done{background:rgba(240,199,94,.14);border:1px solid rgba(240,199,94,.5);border-radius:12px;padding:10px 12px;font-size:14px;text-align:center}
+
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);flex:1 1 160px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.modes{display:flex;flex-direction:column;gap:8px}
+.mode{display:flex;flex-direction:column;gap:2px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer}
+.mode[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mode strong{font-size:15px}
+.mode span{font-size:13px;color:var(--muted)}
+
+.sched{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.sched li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.sched li:first-child{border-top:0}
+.sched .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.sched .b{font-family:var(--display);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums}
+.sched li[data-s="past"]{opacity:.5}
+.tag{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.sched li[data-s="now"] .tag{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* Inputs */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .fl{font-size:13px;font-weight:600;color:var(--muted)}
+.input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;min-height:46px}
+.money{position:relative}
+.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:var(--display);font-weight:600;font-size:22px;color:var(--muted)}
+.money .input{padding-left:32px;font-family:var(--display);font-weight:800;font-size:28px;font-variant-numeric:tabular-nums}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:22px;font-weight:600;cursor:pointer}
+.stepper output{font-family:var(--display);font-weight:800;font-size:40px;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.cbtn{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;min-height:46px}
+.cbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cbtn[aria-pressed="false"] .chip{opacity:.4}
+.cbtn[aria-pressed="false"]{color:var(--muted)}
+.cbtn .ck{margin-left:auto;font-size:14px}
+details.inv summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+details.inv summary::-webkit-details-marker{display:none}
+details.inv summary::after{content:"▾";color:var(--muted)}
+details.inv[open] summary::after{content:"▴"}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:6px}
+.inv-grid .item{display:flex;align-items:center;gap:8px}
+.inv-grid input{width:100%;min-width:0;text-align:right;font-variant-numeric:tabular-nums}
+
+.notice{border:1px solid var(--bad);color:var(--bad);border-radius:12px;padding:10px 12px;font-size:14px}
+.note{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--muted)}
+
+/* Tables */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;font-weight:600;padding:0 6px 8px}
+th:first-child,td:first-child{text-align:left}
+td{padding:9px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+td .cn{display:flex;align-items:center;gap:10px;font-weight:600}
+tfoot td{font-weight:600}
+.big-line{font-family:var(--display);font-weight:800;font-size:26px;line-height:1.1}
+
+/* Cuentas */
+textarea.input{min-height:132px;resize:vertical;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .chip{--s:18px}
+.res{display:flex;flex-direction:column}
+.res .p{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-top:1px solid var(--line);align-items:baseline}
+.res .p:first-child{border-top:0}
+.res .nm{font-weight:600;font-size:17px}
+.res .tot{font-family:var(--display);font-weight:800;font-size:30px;text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.res .bd{font-size:13px;color:var(--muted)}
+.res .net{font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.net.up{color:var(--good)} .net.down{color:var(--bad)}
+.pillrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:13px;font-weight:600;padding:5px 10px;border-radius:99px;border:1px solid var(--line)}
+.pill.ok{color:var(--good);border-color:var(--good)} .pill.off{color:var(--bad);border-color:var(--bad)}
+.warns{margin:0;padding-left:18px;font-size:13px;color:var(--bad);display:flex;flex-direction:column;gap:2px}
+.tr{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.tr:first-child{border-top:0}
+.tr b{font-family:var(--display);font-size:24px;font-weight:800}
+
+
+/* Cuentas por jugador */
+.pl{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--line)}
+.pl:first-child{border-top:0;padding-top:0}
+.ph{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.ph .nm{font-weight:600;font-size:17px;min-height:44px}
+.pl .tot{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;text-align:right}
+.pm{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline}
+.pm .bd{font-size:13px;color:var(--muted)}
+.pm .net{font-size:13px;font-weight:600;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.btn.sm{min-height:40px;padding:8px 12px;font-size:14px;align-self:flex-start}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.st{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg)}
+.stl{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.stl small{margin-left:auto;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums;font-size:13px}
+.ctl{display:grid;grid-template-columns:44px 1fr 44px;gap:6px}
+.ctl button{height:44px;border:1px solid var(--line);background:var(--surface);border-radius:10px;font-size:22px;font-weight:600;cursor:pointer}
+.ctl input{width:100%;min-width:0;height:44px;text-align:center;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600}
+
+/* Manos */
+.hand{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--line)}
+.hand:first-child{border-top:0;padding-top:0}
+.hh{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:baseline}
+.hh .rk{font-family:var(--display);font-weight:800;font-size:32px;color:var(--accent);line-height:1;min-width:1.5ch}
+.hh .hn{font-weight:600;font-size:17px}
+.hh .pr{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.cards{display:flex;gap:6px}
+.pc{width:42px;height:56px;border-radius:7px;background:#fff;color:#16201c;border:1px solid #c9d2cd;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:21px;line-height:1;font-variant-emoji:text}
+.pc i{font-style:normal;font-size:20px}
+.pc.r{color:#c8372d}
+.pc.dim{opacity:.45}
+
+dl{margin:0;display:flex;flex-direction:column;gap:12px}
+dt{font-weight:600}
+dd{margin:2px 0 0;color:var(--muted)}
+
+/* ===== Responsive: celular (base), tablet y escritorio ===== */
+@media (min-width:700px){
+  .wrap{max-width:760px;padding:32px 24px 64px;gap:20px}
+  h1{font-size:52px}
+  .tabs button{font-size:15px;padding:12px 6px}
+  .card{padding:20px}
+  .blind .n{font-size:clamp(64px,10vw,104px)}
+  .clock{font-size:clamp(56px,9vw,84px)}
+  #hands{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  #hands .hand{border:1px solid var(--line);border-radius:14px;padding:14px}
+  #hands .hand:first-child{padding-top:14px}
+}
+@media (min-width:1000px){
+  .wrap{max-width:1120px;padding:40px 32px 72px}
+  header{flex-direction:row;align-items:baseline;justify-content:space-between;gap:24px}
+  h1{font-size:60px}
+  .tabs{max-width:640px;align-self:center;width:100%}
+  /* Fichas: configuración a la izquierda, reparto a la derecha */
+  #p-fichas{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+  #p-fichas>.card:nth-child(1){grid-column:1;grid-row:1}
+  #p-fichas>.card:nth-child(2){grid-column:2;grid-row:1 / span 2}
+  #p-fichas>.card:nth-child(3){grid-column:1;grid-row:2}
+  /* Reloj: paño y controles a la izquierda, estructura y niveles a la derecha */
+  #p-reloj{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
+  #p-reloj>.felt{grid-column:1;grid-row:1 / span 2;padding:32px 28px 26px}
+  #p-reloj>.row{grid-column:1;grid-row:3}
+  #p-reloj>.card:nth-of-type(1){grid-column:2;grid-row:1}
+  #p-reloj>.card:nth-of-type(2){grid-column:2;grid-row:2}
+  .blind .n{font-size:clamp(72px,8vw,120px)}
+  .clock{font-size:clamp(64px,7vw,96px)}
+  /* Cuentas: jugadores en grilla y transferencias al costado */
+  #p-cuentas{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:20px;align-items:start}
+  #p-cuentas>.card:nth-child(2){position:sticky;top:20px}
+  #players{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  #players .pl{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface)}
+  #players .pl:first-child{padding-top:14px}
+  #players .notice{grid-column:1 / -1}
+  /* Manos: tres columnas */
+  #hands{grid-template-columns:repeat(3,1fr)}
+  #p-manos{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:20px;align-items:start}
+  /* Mesa */
+  #p-mesa{max-width:720px}
+}
+@media (max-width:380px){
+  .wrap{padding-left:12px;padding-right:12px}
+  h1{font-size:34px}
+  .pc{width:38px;height:52px;font-size:19px}
+  .cards{gap:4px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  .wrap{padding-top:12px;padding-bottom:24px}
+  h1{font-size:30px}
+  .blind .n{font-size:clamp(44px,12vh,72px)}
+  .clock{font-size:clamp(40px,12vh,64px)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Noche de Poker</h1>
+    <p class="sub">Fichas, reloj de ciegas y cuentas para cualquier mesa.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button role="tab" id="t-fichas" data-tab="fichas" aria-selected="true">Fichas</button>
+    <button role="tab" id="t-reloj" data-tab="reloj" aria-selected="false">Reloj</button>
+    <button role="tab" id="t-cuentas" data-tab="cuentas" aria-selected="false">Cuentas</button>
+    <button role="tab" id="t-manos" data-tab="manos" aria-selected="false">Manos</button>
+    <button role="tab" id="t-mesa" data-tab="mesa" aria-selected="false">Mesa</button>
+  </nav>
+
+  <!-- FICHAS -->
+  <section id="p-fichas" role="tabpanel" aria-labelledby="t-fichas">
+    <div class="card">
+      <h2>La partida</h2>
+      <div class="field">
+        <span class="fl">Jugadores</span>
+        <div class="stepper">
+          <button id="nMinus" aria-label="Un jugador menos">−</button>
+          <output id="nOut" aria-live="polite">6</output>
+          <button id="nPlus" aria-label="Un jugador más">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="buyin">Cuánto pone cada uno</label>
+        <div class="money"><span>$</span><input class="input" id="buyin" type="text" inputmode="numeric" autocomplete="off" aria-describedby="buyinHint"></div>
+        <p class="small muted" id="buyinHint"></p>
+      </div>
+      <div class="field">
+        <span class="fl">Colores de ficha que van a usar</span>
+        <div class="cols" id="cols"></div>
+        <p class="small muted">Valen de menos a más: blanca, roja, verde, azul, negra.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Reparto</h2>
+      <div id="planBox"></div>
+    </div>
+
+    <div class="card">
+      <details class="inv" id="inv">
+        <summary>Fichas que tienen (inventario)</summary>
+        <p class="small muted">Cargá cuántas fichas de cada color hay. Se usan para calcular el reparto y el banco.</p>
+        <div class="inv-grid" id="invGrid"></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- RELOJ -->
+  <section id="p-reloj" role="tabpanel" aria-labelledby="t-reloj" hidden>
+    <div class="felt" id="felt">
+      <div class="lbl" id="lvlLabel">Nivel 1</div>
+      <div class="blinds">
+        <div class="blind"><div class="lbl">Small</div><div class="n"><small>$</small><span id="sbN">50</span></div><div class="stack" id="sbChips"></div><div class="how" id="sbHow"></div></div>
+        <div class="blind"><div class="lbl">Big</div><div class="n"><small>$</small><span id="bbN">100</span></div><div class="stack" id="bbChips"></div><div class="how" id="bbHow"></div></div>
+      </div>
+      <div class="clockbox">
+        <div class="lbl">Quedan en la partida</div>
+        <div class="clock" id="clock" role="timer" aria-live="off">2:00:00</div>
+        <div class="next" id="nextLine"></div>
+      </div>
+      <div class="bar" id="bar" aria-hidden="true"><i id="barFill"></i></div>
+      <div class="done" id="doneBox" hidden>Se terminó el tiempo. Terminen la mano en juego, cuenten fichas y pasen a Cuentas.</div>
+    </div>
+
+    <div class="row">
+      <button class="btn primary" id="toggle">Iniciar partida</button>
+      <button class="btn" id="skip">Siguiente nivel</button>
+      <button class="btn" id="reset">Reiniciar</button>
+    </div>
+
+    <div class="card">
+      <h2>Estructura de ciegas</h2>
+      <p class="small muted" id="blindNote"></p>
+      <div class="modes" id="modes"></div>
+    </div>
+
+    <div class="card">
+      <h2>Niveles</h2>
+      <ul class="sched" id="sched"></ul>
+    </div>
+  </section>
+
+  <!-- CUENTAS -->
+  <section id="p-cuentas" role="tabpanel" aria-labelledby="t-cuentas" hidden>
+    <div class="card">
+      <h2>Fichas de cada uno</h2>
+      <p class="small muted">Tocá "Cargar fichas" en cada jugador y elegí cuántas de cada color tiene. El total se calcula solo.</p>
+      <div class="note" id="exNote">Esto es un ejemplo. Ponelo en cero y cargá lo de ustedes.</div>
+      <div id="players"></div>
+      <div class="pillrow"><span class="pill" id="check"></span><span class="muted small" id="checkTxt"></span></div>
+      <div class="row"><button class="btn" id="cuClear">Poner todo en cero</button></div>
+    </div>
+
+    <div class="card" id="cuTransCard">
+      <h2>Quién le pasa a quién</h2>
+      <div id="cuTrans"></div>
+      <div class="row"><button class="btn primary" id="copy">Copiar resultado</button></div>
+    </div>
+  </section>
+
+  <!-- MANOS -->
+  <section id="p-manos" role="tabpanel" aria-labelledby="t-manos" hidden>
+    <div class="card">
+      <h2>Ranking de manos</h2>
+      <p class="small muted">De la más fuerte a la más débil. Las cartas atenuadas son de desempate. El porcentaje es la chance de que esa sea tu mejor mano con 7 cartas (2 tuyas y 5 de la mesa).</p>
+      <div id="hands"></div>
+    </div>
+    <div class="card">
+      <h2>Para tener en cuenta</h2>
+      <dl>
+        <div><dt>Se juegan 5 cartas</dt><dd>Armás la mejor mano de 5 cartas usando tus 2 cartas y las 5 de la mesa, en cualquier combinación.</dd></div>
+        <div><dt>Los palos no valen</dt><dd>Si dos jugadores tienen la misma mano exacta, se reparten el pozo.</dd></div>
+        <div><dt>El as</dt><dd>Vale arriba (10-J-Q-K-A) o abajo (A-2-3-4-5) en una escalera, pero no se puede "dar la vuelta": Q-K-A-2-3 no es escalera.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- MESA -->
+  <section id="p-mesa" role="tabpanel" aria-labelledby="t-mesa" hidden>
+    <div class="card">
+      <h2>Cómo se juega</h2>
+      <dl>
+        <div><dt>Sentido</dt><dd>Se juega en sentido antihorario: el botón de dealer pasa un lugar a la derecha después de cada mano y las ciegas se corren con él.</dd></div>
+        <div><dt>Ciegas</dt><dd>La small es el primero a la derecha del dealer y la big es el siguiente. Preflop habla el que sigue a la derecha de la big.</dd></div>
+        <div><dt>Después del flop</dt><dd>Habla primero el jugador más cercano a la derecha del dealer que siga en la mano. El dealer habla último.</dd></div>
+        <div><dt>Cierre</dt><dd>Al terminar los 120 minutos terminan la mano en juego. Cada ficha vale su valor en pesos y cada uno cobra lo que tiene.</dd></div>
+        <div><dt>Recompra</dt><dd id="rebuyTxt">Opcional: una sola durante la primera hora.</dd></div>
+      </dl>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ===== Lógica pura (sin DOM) ===== */
+const COLORS = [
+  {k:'white', n:'Blanca', pl:'blancas', stock:80},
+  {k:'red',   n:'Roja',   pl:'rojas',   stock:40},
+  {k:'green', n:'Verde',  pl:'verdes',  stock:40},
+  {k:'blue',  n:'Azul',   pl:'azules',  stock:40},
+  {k:'black', n:'Negra',  pl:'negras',  stock:40}
+];
+const COLOR_IDX = Object.fromEntries(COLORS.map((c, i) => [c.k, i]));
+
+const fmt = n => String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const money = n => (n < 0 ? '−' : '') + '$' + fmt(n);
+const signed = n => n === 0 ? '$0' : (n > 0 ? '+' : '−') + '$' + fmt(n);
+
+/* Valores "lindos" enteros: 1, 2, 2.5, 5 por potencias de 10 */
+const NICE = (() => {
+  const out = [];
+  for (let e = 0; e <= 8; e++) for (const m of [1, 2, 2.5, 5]) { const v = m * Math.pow(10, e); if (Number.isInteger(v)) out.push(v); }
+  return [...new Set(out)].sort((a, b) => a - b);
+})();
+
+function tuplesOf(k, B, rmax){
+  const top = k === 1 ? B : B / 2;
+  const vals = NICE.filter(v => v <= top);
+  const out = [];
+  (function build(cur){
+    if (cur.length === k) { out.push(cur.slice()); return; }
+    const last = cur[cur.length - 1];
+    for (const v of vals) {
+      if (last !== undefined && (v <= last || v % last !== 0 || v / last > rmax || v / last < 2)) continue;
+      cur.push(v); build(cur); cur.pop();
+    }
+  })([]);
+  return out;
+}
+
+function costOf(c, vals, B){
+  const k = c.length;
+  const T = c.reduce((a, b) => a + b, 0);
+  let cost = 2 * Math.abs(T - 24);
+  for (let j = 0; j < k - 1; j++) if (c[j] < c[j+1]) cost += 3 * (c[j+1] - c[j]);
+  const s = c[k-1] * vals[k-1] / B;
+  if (k >= 3) cost += 60 * Math.max(0, s - 0.3);
+  else if (k === 2) cost += 40 * Math.max(0, s - 0.6);
+  if (c[0] < 5) cost += 2 * (5 - c[0]);
+  if (c[0] > 14) cost += 2 * (c[0] - 14);
+  cost += 5 * Math.abs(Math.log2(vals[0] / (B / 100)));
+  if (k >= 2 && vals[1] !== 2 * vals[0]) cost += 4;
+  for (let j = 0; j < k - 1; j++) cost += 0.5 * Math.abs(Math.log2(vals[j+1] / vals[j]) - 2.3);
+  return cost;
+}
+
+function countsFor(vals, caps, B, minC){
+  const k = vals.length;
+  const eff = caps.map((cp, j) => Math.min(cp, j === 0 ? 30 : 14));
+  const lowerCap = [];
+  let acc = 0;
+  for (let j = 0; j < k; j++) { acc += eff[j] * vals[j]; lowerCap[j] = acc; }
+  let best = null;
+  const c = new Array(k).fill(0);
+  (function rec(j, rem){
+    if (j === 0) {
+      const n = rem / vals[0];
+      if (Number.isInteger(n) && n >= minC && n <= eff[0]) {
+        c[0] = n;
+        const cost = costOf(c, vals, B);
+        if (!best || cost < best.cost) best = {cost, counts: c.slice()};
+      }
+      return;
+    }
+    const maxc = Math.min(eff[j], Math.floor(rem / vals[j]));
+    for (let n = minC; n <= maxc; n++) {
+      const left = rem - n * vals[j];
+      if (left > lowerCap[j-1]) continue;
+      c[j] = n;
+      rec(j - 1, left);
+    }
+  })(k - 1, B);
+  return best;
+}
+
+/* sel: claves de color elegidas, stock: {white:80,...} */
+const _cache = new Map();
+function solve(N, B, sel, stock){
+  const keyStr = JSON.stringify([N, B, sel, sel.map(k => stock[k])]);
+  if (_cache.has(keyStr)) return _cache.get(keyStr);
+  const r = solveRaw(N, B, sel, stock);
+  if (_cache.size > 200) _cache.clear();
+  _cache.set(keyStr, r);
+  return r;
+}
+function solveRaw(N, B, sel, stock){
+  const idx = sel.map(k => COLOR_IDX[k]).sort((a, b) => a - b);
+  const keys = idx.map(i => COLORS[i].k);
+  const k = keys.length;
+  if (!k) return {error: 'Elegí al menos un color de ficha.'};
+  const caps = keys.map(kk => Math.floor((stock[kk] || 0) / N));
+  for (let j = 0; j < k; j++) {
+    if (caps[j] < 1) {
+      const c = COLORS[COLOR_IDX[keys[j]]];
+      return {error: 'No alcanzan las fichas ' + c.pl + ' para ' + N + ' jugadores (hay ' + (stock[keys[j]] || 0) + ' y necesitás al menos ' + N + '). Sacá ese color o cargá más en el inventario.'};
+    }
+  }
+  const passes = [{min: 1, rmax: 10, warn: null}, {min: 0, rmax: 25, warn: 'Con este monto no entran todos los colores: algunos quedan sin usar.'}];
+  for (const p of passes) {
+    let best = null;
+    for (const vals of tuplesOf(k, B, p.rmax)) {
+      const r = countsFor(vals, caps, B, p.min);
+      if (!r) continue;
+      const total = r.cost + 0;
+      if (!best || total < best.cost) best = {cost: total, vals, counts: r.counts};
+    }
+    if (best) {
+      const colors = keys.map((kk, j) => ({k: kk, n: COLORS[COLOR_IDX[kk]].n, pl: COLORS[COLOR_IDX[kk]].pl, value: best.vals[j], per: best.counts[j], stock: stock[kk] || 0}));
+      const per = colors.reduce((a, c) => a + c.per, 0);
+      return {colors, per, valueByKey: Object.fromEntries(colors.map(c => [c.k, c.value])), warn: p.warn};
+    }
+  }
+  return {error: 'No se pudo armar un reparto exacto con ' + k + (k === 1 ? ' color' : ' colores') + ' y este monto. Probá con menos colores, otro monto o más fichas en el inventario.'};
+}
+
+/* Fichas sueltas para formar un monto (greedy; los valores son múltiplos entre sí) */
+function compose(amount, plan){
+  if (!plan || plan.error) return [];
+  const out = [];
+  [...plan.colors].reverse().forEach(c => {
+    if (!c.value) return;
+    const n = Math.floor(amount / c.value);
+    if (n) { out.push([c, n]); amount -= n * c.value; }
+  });
+  return out;
+}
+function howText(amount, plan){
+  return compose(amount, plan).map(([c, n]) => n + ' ' + (n > 1 ? c.pl : c.n.toLowerCase())).join(' + ');
+}
+
+/* Ciegas: small = ficha de menor valor elegida, big = el doble */
+function fallbackV0(B){
+  const t = B / 100;
+  return NICE.slice().sort((a, b) => Math.abs(Math.log(a / t)) - Math.abs(Math.log(b / t)))[0];
+}
+const MODE_DEFS = {
+  suben: {name: 'Suben a la hora', steps: [[0, 1], [60, 2], [90, 3]]},
+  fijas: {name: 'Ciegas fijas',    steps: [[0, 1]]}
+};
+function blindLevels(modeKey, B, plan){
+  const v0 = plan && !plan.error ? plan.colors[0].value : fallbackV0(B);
+  return MODE_DEFS[modeKey].steps.map(([min, mult]) => ({from: min * 60000, sb: mult * v0, bb: 2 * mult * v0}));
+}
+function modeDesc(modeKey, B, plan){
+  const L = blindLevels(modeKey, B, plan);
+  const f = l => '$' + fmt(l.sb) + '/$' + fmt(l.bb);
+  if (modeKey === 'suben') return f(L[0]) + ' la primera hora, ' + f(L[1]) + ' hasta los 90 min y ' + f(L[2]) + ' al final. Castiga al que se esconde.';
+  return f(L[0]) + ' todo el tiempo. Stack de ' + Math.round(B / L[0].bb) + ' ciegas grandes.';
+}
+
+/* Quién le pasa a quién (solo si todo cierra) */
+function settle(rows, B){
+  const deb = rows.filter(r => r.total < B).map(r => ({name: r.name, amt: B - r.total})).sort((a, b) => b.amt - a.amt);
+  const cre = rows.filter(r => r.total > B).map(r => ({name: r.name, amt: r.total - B})).sort((a, b) => b.amt - a.amt);
+  const out = [];
+  let i = 0, j = 0;
+  while (i < deb.length && j < cre.length) {
+    const x = Math.min(deb[i].amt, cre[j].amt);
+    out.push({from: deb[i].name, to: cre[j].name, amt: x});
+    deb[i].amt -= x; cre[j].amt -= x;
+    if (!deb[i].amt) i++;
+    if (!cre[j].amt) j++;
+  }
+  return out;
+}
+
+
+/* ===== App ===== */
+const $ = id => document.getElementById(id);
+const KEY = 'noche-poker-v2';
+const TOTAL = 120 * 60000;
+const MODE_ORDER = ['suben', 'fijas'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss = ms => { const s = Math.max(0, Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); };
+const hms = ms => { const s = Math.max(0, Math.ceil(ms/1000)); return Math.floor(s/3600) + ':' + String(Math.floor(s%3600/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); };
+const chipEl = (k, extra) => '<span class="chip ' + k + (extra ? ' ' + extra : '') + '"></span>';
+
+let S, plan = null, lvCache = null, lastIdx = null, ctx = null, resetArmed = 0, cacheKey = '';
+
+function defaults(){
+  return {n:6, buyin:5000, colors:COLORS.map(c => c.k), stock:Object.fromEntries(COLORS.map(c => [c.k, c.stock])),
+          mode:'suben', base:0, startedAt:null, tab:'fichas', open:0, example:true,
+          players:Array.from({length:12}, (_, i) => ({name:i === 0 ? 'Gonza' : (i === 1 ? 'Mati' : 'Jugador ' + (i+1)), counts:i === 0 ? {black:1, blue:2, green:3} : (i === 1 ? {green:4, white:10} : {})}))};
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+function load(hot){
+  const d = defaults();
+  let saved = hot && hot.mode ? hot : null;
+  if(!saved){ try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){} }
+  if(saved && typeof saved === 'object'){
+    if(Number.isInteger(saved.n) && saved.n >= 2 && saved.n <= 12) d.n = saved.n;
+    if(Number.isInteger(saved.buyin) && saved.buyin >= 100) d.buyin = saved.buyin;
+    if(Array.isArray(saved.colors) && saved.colors.length) d.colors = COLORS.map(c => c.k).filter(k => saved.colors.includes(k));
+    if(saved.stock) COLORS.forEach(c => { if(Number.isInteger(saved.stock[c.k]) && saved.stock[c.k] >= 0) d.stock[c.k] = saved.stock[c.k]; });
+    if(MODE_DEFS[saved.mode]) d.mode = saved.mode; else if(saved.mode === 'clasica' || saved.mode === 'altas') d.mode = 'fijas';
+    if(typeof saved.base === 'number') d.base = saved.base;
+    if(typeof saved.startedAt === 'number' || saved.startedAt === null) d.startedAt = saved.startedAt;
+    if(Array.isArray(saved.players)) saved.players.slice(0, 12).forEach((p, i) => {
+      if(p && typeof p.name === 'string') d.players[i].name = p.name.slice(0, 18);
+      if(p && p.counts && typeof p.counts === 'object') { d.players[i].counts = {}; COLORS.forEach(c => { const v = p.counts[c.k]; if(Number.isInteger(v) && v > 0) d.players[i].counts[c.k] = Math.min(v, 999); }); }
+    });
+    if(typeof saved.example === 'boolean') d.example = saved.example;
+    if(Number.isInteger(saved.open)) d.open = saved.open;
+  }
+  if(!d.colors.length) d.colors = COLORS.map(c => c.k);
+  return d;
+}
+
+/* ---------- Recalcular todo ---------- */
+function recompute(){
+  plan = solve(S.n, S.buyin, S.colors, S.stock);
+  lvCache = null; cacheKey = ''; lastIdx = null;
+  save();
+  renderFichas(); renderModes(); renderBar(); buildPlayers(); tick();
+  $('rebuyTxt').textContent = 'Opcional: una sola de ' + money(S.buyin) + ' durante la primera hora. Quien recompra puede perder hasta ' + money(S.buyin * 2) + '.';
+}
+const levels = () => lvCache || (lvCache = blindLevels(S.mode, S.buyin, plan));
+
+/* ---------- Fichas ---------- */
+function renderFichas(){
+  $('nOut').textContent = S.n;
+  $('nMinus').disabled = S.n <= 2; $('nPlus').disabled = S.n >= 12;
+  $('buyinHint').textContent = 'Pozo total: ' + money(S.n * S.buyin) + ' (' + S.n + ' × ' + money(S.buyin) + ')';
+  if(document.activeElement !== $('buyin')) $('buyin').value = fmt(S.buyin);
+
+  $('cols').innerHTML = COLORS.map(c => {
+    const on = S.colors.includes(c.k);
+    return '<button class="cbtn" data-k="' + c.k + '" aria-pressed="' + on + '">' + chipEl(c.k, 'big') + '<span>' + c.n + '</span><span class="ck">' + (on ? '✓' : '') + '</span></button>';
+  }).join('');
+  $('cols').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k, on = S.colors.includes(k);
+    if(on && S.colors.length === 1) return;
+    S.colors = COLORS.map(c => c.k).filter(x => x === k ? !on : S.colors.includes(x));
+    recompute();
+  }));
+
+  if(plan.error){
+    $('planBox').innerHTML = '<div class="notice" role="alert">' + esc(plan.error) + '</div>';
+  } else {
+    const rows = plan.colors.map(c => '<tr><td><span class="cn">' + chipEl(c.k) + c.n + '</span></td><td>' + money(c.value) + '</td><td>' + c.per + '</td><td>' + (c.per * S.n) + '</td><td>' + (c.stock - c.per * S.n) + '</td></tr>').join('');
+    const totalAll = plan.colors.reduce((a, c) => a + c.per * S.n, 0);
+    $('planBox').innerHTML =
+      '<p class="big-line">Cada uno recibe ' + plan.per + ' fichas = ' + money(S.buyin) + '</p>' +
+      (plan.warn ? '<div class="note">' + esc(plan.warn) + '</div>' : '') +
+      '<div class="tw"><table><thead><tr><th>Ficha</th><th>Vale</th><th>Cada uno</th><th>Repartís</th><th>Banco</th></tr></thead><tbody>' + rows +
+      '</tbody><tfoot><tr><td>Total</td><td></td><td>' + plan.per + '</td><td>' + totalAll + '</td><td></td></tr></tfoot></table></div>' +
+      '<p class="small muted">El banco son las fichas que sobran en el centro para dar cambio.</p>';
+  }
+
+  if(!$('invGrid').children.length || $('invGrid').dataset.sig !== '1'){
+    $('invGrid').dataset.sig = '1';
+    $('invGrid').innerHTML = COLORS.map(c => '<div class="item">' + chipEl(c.k) + '<input class="input" id="st-' + c.k + '" data-k="' + c.k + '" type="text" inputmode="numeric" value="' + S.stock[c.k] + '" aria-label="Fichas ' + c.pl + '"></div>').join('');
+    $('invGrid').querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+      const d = inp.value.replace(/\D/g, '').slice(0, 5);
+      S.stock[inp.dataset.k] = d === '' ? 0 : +d;
+      inp.value = d;
+      recompute();
+    }));
+  }
+}
+$('nMinus').addEventListener('click', () => { S.n = Math.max(2, S.n - 1); recompute(); });
+$('nPlus').addEventListener('click', () => { S.n = Math.min(12, S.n + 1); recompute(); });
+$('buyin').addEventListener('input', () => {
+  const d = $('buyin').value.replace(/\D/g, '').slice(0, 8);
+  $('buyin').value = d === '' ? '' : fmt(+d);
+  if(d !== '' && +d >= 100){ S.buyin = +d; recompute(); }
+  else $('buyinHint').textContent = 'El mínimo es $100.';
+});
+$('buyin').addEventListener('blur', () => { $('buyin').value = fmt(S.buyin); $('buyinHint').textContent = 'Pozo total: ' + money(S.n * S.buyin) + ' (' + S.n + ' × ' + money(S.buyin) + ')'; });
+
+/* ---------- Reloj ---------- */
+function elapsed(){ return Math.min(TOTAL, S.base + (S.startedAt ? Date.now() - S.startedAt : 0)); }
+function levelAt(ms){ let idx = 0; levels().forEach((l, i) => { if(l.from <= ms) idx = i; }); return idx; }
+function levelEnd(i){ const L = levels(); return i + 1 < L.length ? L[i+1].from : TOTAL; }
+function chipHtml(amount){ return compose(amount, plan).map(([c, n]) => Array.from({length:n}, () => chipEl(c.k)).join('')).join(''); }
+
+function renderModes(){
+  $('blindNote').textContent = plan.error ? 'Primero resolvé el reparto de fichas. Mientras tanto las ciegas se calculan solo con el monto.' : 'La small es tu ficha más chica (' + plan.colors[0].n.toLowerCase() + ', ' + money(plan.colors[0].value) + ') y la big es el doble.';
+  $('modes').innerHTML = MODE_ORDER.map(k => '<button class="mode" data-mode="' + k + '" aria-pressed="' + (S.mode === k) + '"><strong>' + MODE_DEFS[k].name + '</strong><span>' + esc(modeDesc(k, S.buyin, plan)) + '</span></button>').join('');
+  $('modes').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { S.mode = b.dataset.mode; lvCache = null; cacheKey = ''; lastIdx = null; save(); renderModes(); renderBar(); tick(); }));
+}
+function renderBar(){
+  $('bar').querySelectorAll('b').forEach(x => x.remove());
+  levels().slice(1).forEach(l => { const b = document.createElement('b'); b.style.left = (l.from / TOTAL * 100) + '%'; $('bar').appendChild(b); });
+}
+function renderSched(i, done){
+  const L = levels();
+  $('sched').innerHTML = L.map((l, k) => {
+    const end = k + 1 < L.length ? L[k+1].from : TOTAL;
+    const st = done || k < i ? 'past' : (k === i ? 'now' : 'next');
+    const tag = st === 'past' ? 'Listo' : (st === 'now' ? 'Ahora' : 'Luego');
+    return '<li data-s="' + st + '"><span class="t">' + (l.from/60000) + '–' + (end/60000) + ' min</span><span class="b">$' + fmt(l.sb) + ' / $' + fmt(l.bb) + '</span><span class="tag">' + tag + '</span></li>';
+  }).join('');
+}
+function beep(times){
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = ctx.currentTime;
+    for(let i = 0; i < times; i++){
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t0 + i*0.3);
+      g.gain.exponentialRampToValueAtTime(0.3, t0 + i*0.3 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + i*0.3 + 0.22);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0 + i*0.3); o.stop(t0 + i*0.3 + 0.25);
+    }
+  } catch(e){}
+  try { navigator.vibrate && navigator.vibrate(times > 2 ? [200,100,200,100,200] : [200]); } catch(e){}
+}
+function tick(){
+  let e = elapsed();
+  const wasRunning = !!S.startedAt;
+  if(S.startedAt && e >= TOTAL){ S.base = TOTAL; S.startedAt = null; e = TOTAL; save(); beep(4); }
+  const L = levels();
+  const done = e >= TOTAL;
+  const i = done ? L.length - 1 : levelAt(e);
+  if(lastIdx !== null && i !== lastIdx && wasRunning && !done){ beep(2); $('felt').classList.add('flash'); setTimeout(() => $('felt').classList.remove('flash'), 2000); }
+  lastIdx = i;
+  const l = L[i];
+  const key = S.mode + ':' + i + ':' + done + ':' + l.sb + ':' + l.bb;
+  if(key !== cacheKey){
+    cacheKey = key;
+    $('sbN').textContent = fmt(l.sb); $('bbN').textContent = fmt(l.bb);
+    $('sbChips').innerHTML = chipHtml(l.sb); $('bbChips').innerHTML = chipHtml(l.bb);
+    $('sbHow').textContent = howText(l.sb, plan); $('bbHow').textContent = howText(l.bb, plan);
+    renderSched(i, done);
+  }
+  $('lvlLabel').textContent = done ? 'Tiempo cumplido' : (L.length > 1 ? 'Nivel ' + (i+1) + ' de ' + L.length : 'Ciegas fijas');
+  $('clock').textContent = hms(TOTAL - e);
+  const last = i >= L.length - 1;
+  $('nextLine').textContent = done ? 'Última mano y a contar.' : (last ? (L.length > 1 ? 'Último nivel, hasta el final.' : 'Sin cambios de nivel.') : 'Próximo nivel en ' + mmss(levelEnd(i) - e) + ': $' + fmt(L[i+1].sb) + ' / $' + fmt(L[i+1].bb));
+  $('barFill').style.width = (e / TOTAL * 100) + '%';
+  $('doneBox').hidden = !done;
+  $('toggle').textContent = done ? 'Ir a las cuentas' : (S.startedAt ? 'Pausar' : (e > 0 ? 'Seguir' : 'Iniciar partida'));
+  $('skip').disabled = done || last;
+  if(resetArmed && Date.now() > resetArmed){ resetArmed = 0; $('reset').textContent = 'Reiniciar'; }
+}
+async function keepAwake(){ try { if(navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e){} }
+$('toggle').addEventListener('click', () => {
+  const e = elapsed();
+  if(e >= TOTAL){ showTab('cuentas'); return; }
+  if(S.startedAt){ S.base = e; S.startedAt = null; }
+  else { S.startedAt = Date.now(); keepAwake(); try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume(); } catch(err){} }
+  save(); tick();
+});
+$('skip').addEventListener('click', () => {
+  const e = elapsed(), i = levelAt(e), L = levels();
+  if(i + 1 >= L.length) return;
+  S.base = L[i+1].from; if(S.startedAt) S.startedAt = Date.now();
+  lastIdx = i + 1; save(); tick();
+});
+$('reset').addEventListener('click', () => {
+  if(!resetArmed){ resetArmed = Date.now() + 3000; $('reset').textContent = '¿Seguro? Tocá de nuevo'; return; }
+  resetArmed = 0; $('reset').textContent = 'Reiniciar';
+  S.base = 0; S.startedAt = null; lastIdx = null; cacheKey = ''; save(); tick();
+});
+
+/* ---------- Cuentas ---------- */
+let lastSummary = '';
+const pname = i => (S.players[i].name || '').trim() || 'Jugador ' + (i + 1);
+function ptotal(p){ return plan.error ? 0 : plan.colors.reduce((a, c) => a + (p.counts[c.k] || 0) * c.value, 0); }
+function pbreak(p){ return plan.error ? '' : [...plan.colors].reverse().filter(c => p.counts[c.k]).map(c => p.counts[c.k] + ' ' + (p.counts[c.k] > 1 ? c.pl : c.n.toLowerCase())).join(' · '); }
+
+function buildPlayers(){
+  $('exNote').hidden = !S.example;
+  if(plan.error){
+    $('players').innerHTML = '<div class="notice">Primero armá el reparto en Fichas: sin valores no se pueden hacer las cuentas.</div>';
+    $('check').textContent = ''; $('check').className = 'pill'; $('checkTxt').textContent = ''; $('cuTrans').innerHTML = ''; $('cuTransCard').hidden = true;
+    return;
+  }
+  $('cuTransCard').hidden = false;
+  $('players').innerHTML = S.players.slice(0, S.n).map((p, i) => {
+    const open = S.open === i;
+    const steps = open ? '<div class="steps">' + plan.colors.map(c => '<div class="st"><div class="stl">' + chipEl(c.k) + '<span>' + c.n + '</span><small>' + money(c.value) + ' c/u</small></div><div class="ctl"><button data-i="' + i + '" data-k="' + c.k + '" data-d="-1" aria-label="Una ficha ' + c.n.toLowerCase() + ' menos">−</button><input type="text" inputmode="numeric" value="' + (p.counts[c.k] || 0) + '" data-i="' + i + '" data-k="' + c.k + '" aria-label="Fichas ' + c.pl + ' de ' + esc(pname(i)) + '"><button data-i="' + i + '" data-k="' + c.k + '" data-d="1" aria-label="Una ficha ' + c.n.toLowerCase() + ' más">+</button></div></div>').join('') + '</div>' : '';
+    return '<div class="pl"><div class="ph"><input class="input nm" type="text" maxlength="18" value="' + esc(p.name) + '" data-name="' + i + '" aria-label="Nombre del jugador ' + (i+1) + '"><span class="tot" id="pt' + i + '"></span></div>' +
+      '<div class="pm"><span class="bd" id="pb' + i + '"></span><span class="net" id="pn' + i + '"></span></div>' +
+      '<button class="btn sm" data-open="' + i + '" aria-expanded="' + open + '">' + (open ? 'Cerrar' : 'Cargar fichas') + '</button>' + steps + '</div>';
+  }).join('');
+  updateCuentas();
+}
+function updateCuentas(){
+  if(plan.error) return;
+  const B = S.buyin, N = S.n, pot = N * B;
+  const rows = S.players.slice(0, N).map((p, i) => ({name: pname(i), total: ptotal(p)}));
+  rows.forEach((r, i) => {
+    const p = S.players[i], net = r.total - B;
+    $('pt' + i).textContent = money(r.total);
+    $('pb' + i).textContent = pbreak(p) || 'Sin fichas';
+    const el = $('pn' + i);
+    el.textContent = (net === 0 ? '' : signed(net) + ' ') + (net > 0 ? 'a favor' : (net < 0 ? 'en contra' : 'queda igual'));
+    el.className = 'net ' + (net > 0 ? 'up' : (net < 0 ? 'down' : ''));
+  });
+  const sum = rows.reduce((a, r) => a + r.total, 0);
+  const balanced = sum === pot;
+  $('check').textContent = balanced ? 'Cierra justo' : (sum < pot ? 'Faltan ' + money(pot - sum) : 'Sobran ' + money(sum - pot));
+  $('check').className = 'pill ' + (balanced ? 'ok' : 'off');
+  $('checkTxt').textContent = 'Total cargado: ' + money(sum) + ' de ' + money(pot);
+  const tr = balanced ? settle(rows, B) : [];
+  $('cuTrans').innerHTML = balanced
+    ? (tr.length ? tr.map(t => '<div class="tr"><span><strong>' + esc(t.from) + '</strong> le pasa a <strong>' + esc(t.to) + '</strong></span><b>' + money(t.amt) + '</b></div>').join('') : '<p class="muted small">Todos terminaron igual: no hay que pasar plata.</p>')
+    : '<p class="muted small">Cuando el total cargado cierre con el pozo de ' + money(pot) + ', acá aparece quién le pasa a quién.</p>';
+  lastSummary = 'Cuentas de la noche (' + N + ' jugadores, ' + money(B) + ' c/u)\n' +
+    rows.map(r => r.name + ': ' + money(r.total) + ' (' + signed(r.total - B) + ')').join('\n') +
+    (balanced && tr.length ? '\n\nTransferencias\n' + tr.map(t => t.from + ' le pasa ' + money(t.amt) + ' a ' + t.to).join('\n') : '');
+}
+function setCount(i, k, v){
+  v = Math.max(0, Math.min(999, v | 0));
+  if(v) S.players[i].counts[k] = v; else delete S.players[i].counts[k];
+  S.example = false; $('exNote').hidden = true; save(); updateCuentas();
+  return v;
+}
+$('players').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]');
+  if(o){ const i = +o.dataset.open; S.open = S.open === i ? -1 : i; save(); buildPlayers(); return; }
+  const b = e.target.closest('[data-d]');
+  if(b){
+    const i = +b.dataset.i, k = b.dataset.k, cur = S.players[i].counts[k] || 0;
+    const v = setCount(i, k, cur + (+b.dataset.d));
+    const inp = b.parentElement.querySelector('input'); if(inp) inp.value = v;
+  }
+});
+$('players').addEventListener('input', e => {
+  const inp = e.target;
+  if(inp.dataset.name !== undefined){ S.players[+inp.dataset.name].name = inp.value; S.example = false; $('exNote').hidden = true; save(); updateCuentas(); return; }
+  if(inp.dataset.k){
+    const d = inp.value.replace(/\D/g, '').slice(0, 3);
+    inp.value = d;
+    setCount(+inp.dataset.i, inp.dataset.k, d === '' ? 0 : +d);
+  }
+});
+$('cuClear').addEventListener('click', () => { S.players.forEach(p => p.counts = {}); S.example = false; save(); buildPlayers(); });
+$('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(lastSummary); $('copy').textContent = 'Copiado'; }
+  catch(e){ $('copy').textContent = 'No se pudo copiar'; }
+  setTimeout(() => { $('copy').textContent = 'Copiar resultado'; }, 1800);
+});
+
+/* ---------- Manos ---------- */
+const HANDS = [
+  {n:'Escalera real', d:'10, J, Q, K y A del mismo palo. No hay nada mejor.', c:['A♠','K♠','Q♠','J♠','10♠'], p:'0,003 %'},
+  {n:'Escalera de color', d:'Cinco cartas seguidas del mismo palo. Si hay dos, gana la que termina en carta más alta.', c:['9♥','8♥','7♥','6♥','5♥'], p:'0,03 %'},
+  {n:'Póker', d:'Cuatro cartas del mismo número. La quinta carta desempata.', c:['Q♠','Q♥','Q♦','Q♣','7♠*'], p:'0,17 %'},
+  {n:'Full', d:'Un trío y un par. Gana el trío más alto y, si empatan, el par.', c:['K♠','K♥','K♦','4♣','4♠'], p:'2,6 %'},
+  {n:'Color', d:'Cinco cartas del mismo palo que no son seguidas. Gana la carta más alta y, si empatan, la siguiente.', c:['A♦','J♦','9♦','6♦','2♦'], p:'3,0 %'},
+  {n:'Escalera', d:'Cinco cartas seguidas de palos distintos. El as vale arriba (10-J-Q-K-A) o abajo (A-2-3-4-5).', c:['9♣','8♦','7♠','6♥','5♣'], p:'4,6 %'},
+  {n:'Trío', d:'Tres cartas del mismo número. Las otras dos desempatan.', c:['8♠','8♥','8♦','K♣*','3♠*'], p:'4,8 %'},
+  {n:'Doble par', d:'Dos pares distintos. Gana el par más alto, después el segundo par y por último la quinta carta.', c:['J♠','J♦','5♥','5♣','A♠*'], p:'23,5 %'},
+  {n:'Par', d:'Dos cartas del mismo número. Desempatan las otras tres, de mayor a menor.', c:['10♠','10♥','A♦*','7♣*','3♠*'], p:'43,8 %'},
+  {n:'Carta alta', d:'No hay ninguna combinación. Gana la carta más alta y, si empatan, la siguiente.', c:['A♠','J♦','8♥','5♣','2♠'], p:'17,4 %'}
+];
+function renderHands(){
+  $('hands').innerHTML = HANDS.map((h, i) => '<div class="hand"><div class="hh"><span class="rk">' + (i + 1) + '</span><span class="hn">' + h.n + '</span><span class="pr">' + h.p + '</span></div><div class="cards" aria-label="Ejemplo: ' + h.c.map(x => x.replace('*', '')).join(' ') + '">' +
+    h.c.map(x => { const dim = x.endsWith('*'); const s = x.replace('*', ''); const suit = s.slice(-1), rank = s.slice(0, -1); return '<span class="pc' + (suit === '♥' || suit === '♦' ? ' r' : '') + (dim ? ' dim' : '') + '">' + rank + '<i>' + suit + '</i></span>'; }).join('') +
+    '</div><p class="small muted">' + h.d + '</p></div>').join('');
+}
+renderHands();
+
+/* ---------- Pestañas ---------- */
+const TABS = ['fichas', 'reloj', 'cuentas', 'manos', 'mesa'];
+function showTab(t){
+  if(!TABS.includes(t)) t = 'fichas';
+  TABS.forEach(k => { $('p-' + k).hidden = k !== t; $('t-' + k).setAttribute('aria-selected', String(k === t)); });
+  if(location.hash !== '#' + t) location.hash = t;
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+function start(hot){
+  S = load(hot);
+  recompute();
+  showTab(location.hash.slice(1) || 'fichas');
+  setInterval(tick, 250);
+  window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => JSON.parse(JSON.stringify(S)));
+}
+(window.claude && window.claude.hot && window.claude.hot.ready) ? window.claude.hot.ready(start) : start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

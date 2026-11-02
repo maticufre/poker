@@ -1,0 +1,16 @@
+{
+  "name": "Noche de Poker",
+  "short_name": "Poker",
+  "description": "Fichas, reloj de ciegas y cuentas para la noche de poker",
+  "lang": "es-AR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f3b2e",
+  "theme_color": "#0f3b2e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
