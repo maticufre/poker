@@ -2,13 +2,23 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f3b2e">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="description" content="Fichas, reloj de ciegas y cuentas para tu noche de poker. Instalable en el celular.">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#eef2ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a1a15" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Poker">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:title" content="Noche de Poker">
+<meta property="og:description" content="Fichas, reloj de ciegas y cuentas para tu noche de poker. Instalable en el celular.">
+<meta property="og:url" content="https://maticufre.github.io/poker/">
+<meta property="og:image" content="https://maticufre.github.io/poker/icon-512.png">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23c8372d'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='3' stroke-dasharray='6 5'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23a82a21' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
 <title>Noche de Poker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +49,13 @@
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 button{touch-action:manipulation}
+/* Sin zoom: ni pellizco ni doble toque; sin selección ni menú al mantener apretado, salvo en campos de texto */
+html{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-touch-callout:none}
+body{-webkit-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+.alert{background:var(--brass);color:#241a00;border-radius:12px;padding:12px 14px;font-weight:600;text-align:center;font-size:16px}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;background:var(--felt);color:var(--felt-ink);border:1px solid rgba(240,199,94,.5);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 8px 28px rgba(0,0,0,.35);z-index:10}
+.toast .btn{background:var(--brass);border-color:var(--brass);color:#241a00}
 button,input,textarea,summary{font:inherit;color:inherit}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px}
 header{display:flex;flex-direction:column;gap:2px}
@@ -48,7 +65,7 @@ h2{font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:.04e
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
 
 .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
-.tabs button{border:0;background:transparent;padding:10px 2px;border-radius:10px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+.tabs button{border:0;background:transparent;padding:10px 2px;min-height:44px;border-radius:10px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--felt);color:var(--felt-ink)}
 
 [hidden]{display:none!important}
@@ -178,11 +195,11 @@ textarea.input{min-height:132px;resize:vertical;line-height:1.5}
 .pm .bd{font-size:13px;color:var(--muted)}
 .pm .net{font-size:13px;font-weight:600;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .btn.sm{min-height:40px;padding:8px 12px;font-size:14px;align-self:flex-start}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:8px}
 .st{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg)}
 .stl{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
 .stl small{margin-left:auto;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums;font-size:13px}
-.ctl{display:grid;grid-template-columns:44px 1fr 44px;gap:6px}
+.ctl{display:grid;grid-template-columns:44px minmax(48px,1fr) 44px;gap:6px}
 .ctl button{height:44px;border:1px solid var(--line);background:var(--surface);border-radius:10px;font-size:22px;font-weight:600;cursor:pointer}
 .ctl input{width:100%;min-width:0;height:44px;text-align:center;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600}
 
@@ -230,8 +247,9 @@ dd{margin:2px 0 0;color:var(--muted)}
   #p-reloj{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
   #p-reloj>.felt{grid-column:1;grid-row:1 / span 2;padding:32px 28px 26px}
   #p-reloj>.row{grid-column:1;grid-row:3}
-  #p-reloj>.card:nth-of-type(1){grid-column:2;grid-row:1}
-  #p-reloj>.card:nth-of-type(2){grid-column:2;grid-row:2}
+  #p-reloj>.card:nth-child(3){grid-column:2;grid-row:1}
+  #p-reloj>.card:nth-child(4){grid-column:2;grid-row:2}
+  #p-reloj>.card:nth-child(5){grid-column:2;grid-row:3}
   .blind .n{font-size:clamp(72px,8vw,120px)}
   .clock{font-size:clamp(64px,7vw,96px)}
   /* Cuentas: jugadores en grilla y transferencias al costado */
@@ -291,7 +309,7 @@ dd{margin:2px 0 0;color:var(--muted)}
       </div>
       <div class="field">
         <label for="buyin">Cuánto pone cada uno</label>
-        <div class="money"><span>$</span><input class="input" id="buyin" type="text" inputmode="numeric" autocomplete="off" aria-describedby="buyinHint"></div>
+        <div class="money"><span>$</span><input class="input" id="buyin" type="text" inputmode="numeric" enterkeyhint="done" autocomplete="off" aria-describedby="buyinHint"></div>
         <p class="small muted" id="buyinHint"></p>
       </div>
       <div class="field">
@@ -329,6 +347,7 @@ dd{margin:2px 0 0;color:var(--muted)}
         <div class="next" id="nextLine"></div>
       </div>
       <div class="bar" id="bar" aria-hidden="true"><i id="barFill"></i></div>
+      <div class="alert" id="alert" role="status" aria-live="polite" hidden></div>
       <div class="done" id="doneBox" hidden>Se terminó el tiempo. Terminen la mano en juego, cuenten fichas y pasen a Cuentas.</div>
     </div>
 
@@ -342,6 +361,12 @@ dd{margin:2px 0 0;color:var(--muted)}
       <h2>Estructura de ciegas</h2>
       <p class="small muted" id="blindNote"></p>
       <div class="modes" id="modes"></div>
+    </div>
+
+    <div class="card">
+      <h2>Avisos</h2>
+      <button class="mode" id="soundBtn" aria-pressed="true"><strong>Sonido al subir las ciegas</strong><span id="soundTxt"></span></button>
+      <p class="small muted">La pantalla se mantiene encendida mientras corre el reloj. Con el iPhone en silencio el sonido puede no oírse: igual aparece el aviso en pantalla.</p>
     </div>
 
     <div class="card">
@@ -407,6 +432,7 @@ dd{margin:2px 0 0;color:var(--muted)}
       <div class="row"><button class="btn primary" id="installBtn" hidden>Instalar ahora</button></div>
     </div>
   </section>
+<div class="toast" id="toast" role="status" hidden><span>Se actualizó la app.</span><button class="btn sm" id="toastBtn">Recargar</button></div>
 </div>
 
 <script>
@@ -597,8 +623,8 @@ let S, plan = null, lvCache = null, lastIdx = null, ctx = null, resetArmed = 0, 
 
 function defaults(){
   return {n:6, buyin:5000, colors:COLORS.map(c => c.k), stock:Object.fromEntries(COLORS.map(c => [c.k, c.stock])),
-          mode:'suben', base:0, startedAt:null, tab:'fichas', open:0, example:true,
-          players:Array.from({length:12}, (_, i) => ({name:i === 0 ? 'Gonza' : (i === 1 ? 'Mati' : 'Jugador ' + (i+1)), counts:i === 0 ? {black:1, blue:2, green:3} : (i === 1 ? {green:4, white:10} : {})}))};
+          mode:'suben', base:0, startedAt:null, tab:'fichas', open:0, example:true, sound:true,
+          players:Array.from({length:12}, (_, i) => ({name:'Jugador ' + (i+1), counts:i === 0 ? {black:1, blue:2, green:3} : (i === 1 ? {green:4, white:10} : {})}))};
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 function load(hot){
@@ -613,7 +639,8 @@ function load(hot){
     if(MODE_DEFS[saved.mode]) d.mode = saved.mode; else if(saved.mode === 'clasica' || saved.mode === 'altas') d.mode = 'fijas';
     if(typeof saved.base === 'number') d.base = saved.base;
     if(typeof saved.startedAt === 'number' || saved.startedAt === null) d.startedAt = saved.startedAt;
-    if(Array.isArray(saved.players)) saved.players.slice(0, 12).forEach((p, i) => {
+    if(typeof saved.sound === 'boolean') d.sound = saved.sound;
+    if(Array.isArray(saved.players) && saved.example !== true) saved.players.slice(0, 12).forEach((p, i) => {
       if(p && typeof p.name === 'string') d.players[i].name = p.name.slice(0, 18);
       if(p && p.counts && typeof p.counts === 'object') { d.players[i].counts = {}; COLORS.forEach(c => { const v = p.counts[c.k]; if(Number.isInteger(v) && v > 0) d.players[i].counts[c.k] = Math.min(v, 999); }); }
     });
@@ -729,11 +756,11 @@ function beep(times){
 function tick(){
   let e = elapsed();
   const wasRunning = !!S.startedAt;
-  if(S.startedAt && e >= TOTAL){ S.base = TOTAL; S.startedAt = null; e = TOTAL; save(); beep(4); }
+  if(S.startedAt && e >= TOTAL){ S.base = TOTAL; S.startedAt = null; e = TOTAL; save(); keepAwake(false); if(S.sound) beep(4); }
   const L = levels();
   const done = e >= TOTAL;
   const i = done ? L.length - 1 : levelAt(e);
-  if(lastIdx !== null && i !== lastIdx && wasRunning && !done){ beep(2); $('felt').classList.add('flash'); setTimeout(() => $('felt').classList.remove('flash'), 2000); }
+  if(lastIdx !== null && i !== lastIdx && wasRunning && !done){ if(S.sound) beep(2); showAlert('¡Suben las ciegas! Ahora $' + fmt(L[i].sb) + ' / $' + fmt(L[i].bb)); $('felt').classList.add('flash'); setTimeout(() => $('felt').classList.remove('flash'), 2000); }
   lastIdx = i;
   const l = L[i];
   const key = S.mode + ':' + i + ':' + done + ':' + l.sb + ':' + l.bb;
@@ -754,12 +781,30 @@ function tick(){
   $('skip').disabled = done || last;
   if(resetArmed && Date.now() > resetArmed){ resetArmed = 0; $('reset').textContent = 'Reiniciar'; }
 }
-async function keepAwake(){ try { if(navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e){} }
+let wl = null, alertTimer = 0;
+async function keepAwake(on){
+  try {
+    if(on && navigator.wakeLock && !wl){ wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); }
+    else if(!on && wl){ const w = wl; wl = null; await w.release(); }
+  } catch(e){ wl = null; }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && S && S.startedAt) keepAwake(true); });
+function showAlert(msg){
+  $('alert').textContent = msg; $('alert').hidden = false;
+  clearTimeout(alertTimer); alertTimer = setTimeout(() => { $('alert').hidden = true; }, 12000);
+}
+function renderSound(){
+  $('soundBtn').setAttribute('aria-pressed', String(S.sound));
+  $('soundTxt').textContent = S.sound ? 'Activado. Suena en cada cambio de nivel y al terminar.' : 'Desactivado. Solo vas a ver el aviso en pantalla.';
+}
+$('soundBtn').addEventListener('click', () => { S.sound = !S.sound; save(); renderSound(); if(S.sound) beep(1); });
+function showToast(){ $('toast').hidden = false; }
+$('toastBtn').addEventListener('click', () => location.reload());
 $('toggle').addEventListener('click', () => {
   const e = elapsed();
   if(e >= TOTAL){ showTab('cuentas'); return; }
-  if(S.startedAt){ S.base = e; S.startedAt = null; }
-  else { S.startedAt = Date.now(); keepAwake(); try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume(); } catch(err){} }
+  if(S.startedAt){ S.base = e; S.startedAt = null; keepAwake(false); }
+  else { S.startedAt = Date.now(); keepAwake(true); try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume(); } catch(err){} }
   save(); tick();
 });
 $('skip').addEventListener('click', () => {
@@ -771,7 +816,7 @@ $('skip').addEventListener('click', () => {
 $('reset').addEventListener('click', () => {
   if(!resetArmed){ resetArmed = Date.now() + 3000; $('reset').textContent = '¿Seguro? Tocá de nuevo'; return; }
   resetArmed = 0; $('reset').textContent = 'Reiniciar';
-  S.base = 0; S.startedAt = null; lastIdx = null; cacheKey = ''; save(); tick();
+  S.base = 0; S.startedAt = null; lastIdx = null; cacheKey = ''; $('alert').hidden = true; keepAwake(false); save(); tick();
 });
 
 /* ---------- Cuentas ---------- */
@@ -791,7 +836,7 @@ function buildPlayers(){
   $('players').innerHTML = S.players.slice(0, S.n).map((p, i) => {
     const open = S.open === i;
     const steps = open ? '<div class="steps">' + plan.colors.map(c => '<div class="st"><div class="stl">' + chipEl(c.k) + '<span>' + c.n + '</span><small>' + money(c.value) + ' c/u</small></div><div class="ctl"><button data-i="' + i + '" data-k="' + c.k + '" data-d="-1" aria-label="Una ficha ' + c.n.toLowerCase() + ' menos">−</button><input type="text" inputmode="numeric" value="' + (p.counts[c.k] || 0) + '" data-i="' + i + '" data-k="' + c.k + '" aria-label="Fichas ' + c.pl + ' de ' + esc(pname(i)) + '"><button data-i="' + i + '" data-k="' + c.k + '" data-d="1" aria-label="Una ficha ' + c.n.toLowerCase() + ' más">+</button></div></div>').join('') + '</div>' : '';
-    return '<div class="pl"><div class="ph"><input class="input nm" type="text" maxlength="18" value="' + esc(p.name) + '" data-name="' + i + '" aria-label="Nombre del jugador ' + (i+1) + '"><span class="tot" id="pt' + i + '"></span></div>' +
+    return '<div class="pl"><div class="ph"><input class="input nm" type="text" maxlength="18" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" value="' + esc(p.name) + '" data-name="' + i + '" aria-label="Nombre del jugador ' + (i+1) + '"><span class="tot" id="pt' + i + '"></span></div>' +
       '<div class="pm"><span class="bd" id="pb' + i + '"></span><span class="net" id="pn' + i + '"></span></div>' +
       '<button class="btn sm" data-open="' + i + '" aria-expanded="' + open + '">' + (open ? 'Cerrar' : 'Cargar fichas') + '</button>' + steps + '</div>';
   }).join('');
@@ -896,15 +941,24 @@ window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
   window.addEventListener('appinstalled', () => { $('installCard').hidden = true; });
 })();
 
+/* ---------- Sin zoom ---------- */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), {passive:false}));
+document.addEventListener('touchmove', e => { if(e.touches && e.touches.length > 1) e.preventDefault(); }, {passive:false});
+
 function start(hot){
   S = load(hot);
-  recompute();
+  recompute(); renderSound();
+  if(S.startedAt) keepAwake(true);
   showTab(location.hash.slice(1) || 'fichas');
   setInterval(tick, 250);
   window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => JSON.parse(JSON.stringify(S)));
 }
 (window.claude && window.claude.hot && window.claude.hot.ready) ? window.claude.hot.ready(start) : start((window.claude && window.claude.hot && window.claude.hot.data) || {});
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load', () => {
+  const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  if(had) navigator.serviceWorker.addEventListener('controllerchange', showToast);
+});
 </script>
 </body>
 </html>
